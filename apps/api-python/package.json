@@ -1,0 +1,18 @@
+{
+  "name": "api-python",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "python -m uvicorn src.main:app --host 0.0.0.0 --port 3003 --reload",
+    "build": "echo 'Python app build completed'",
+    "start": "python -m uvicorn src.main:app --host 0.0.0.0 --port 3003",
+    "lint": "ruff check src/",
+    "check-types": "mypy src/",
+    "test": "pytest",
+    "install": "pip install -r requirements.txt"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*"
+  }
+} 

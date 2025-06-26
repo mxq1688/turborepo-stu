@@ -23,6 +23,9 @@
     "test": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "src/**", "test/**"]
+    },
+    "install": {
+      "cache": false
     }
   }
 }
