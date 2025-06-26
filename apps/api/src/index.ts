@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { userRoutes } from './routes/users.js';
 import { healthRoutes } from './routes/health.js';
+import { cacheRoutes } from './routes/cache.js';
 
 // 加载环境变量
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 // 路由
 app.use('/health', healthRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/cache', cacheRoutes);
 
 // 全局错误处理
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

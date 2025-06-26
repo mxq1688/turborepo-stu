@@ -1,0 +1,16 @@
+{
+  "name": "web-php",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "docker-compose up -d php-app",
+    "build": "docker-compose build php-app",
+    "start": "docker-compose up -d php-app",
+    "stop": "docker-compose stop php-app",
+    "logs": "docker-compose logs -f php-app",
+    "shell": "docker-compose exec php-app bash",
+    "composer": "docker-compose exec php-app composer",
+    "test": "docker-compose exec php-app composer test",
+    "install": "docker-compose exec php-app composer install"
+  }
+} 
