@@ -3,6 +3,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  username?: string;
   avatar?: string;
   createdAt: string;
   updatedAt: string;
@@ -17,6 +18,25 @@ export interface CreateUserRequest {
 export interface UpdateUserRequest {
   name?: string;
   avatar?: string;
+}
+
+// 认证相关类型
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+  message: string;
 }
 
 // API响应类型

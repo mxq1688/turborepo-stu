@@ -5,6 +5,18 @@ import dotenv from 'dotenv';
 import { userRoutes } from './routes/users.js';
 import { healthRoutes } from './routes/health.js';
 import { cacheRoutes } from './routes/cache.js';
+import authRoutes from './routes/auth.js';
+import productsRoutes from './routes/products.js';
+import ordersRoutes from './routes/orders.js';
+
+// 扩展 Express Request 类型
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
 
 // 加载环境变量
 dotenv.config();
@@ -22,6 +34,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/health', healthRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/cache', cacheRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productsRoutes);
+app.use('/api/orders', ordersRoutes);
 
 // 全局错误处理
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -41,4 +56,8 @@ app.listen(PORT, () => {
   console.log(`🚀 API Server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
   console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
+  console.log(`🛍️ Products API: http://localhost:${PORT}/api/products`);
+  console.log(`📦 Orders API: http://localhost:${PORT}/api/orders`);
+  console.log(`👥 Users API: http://localhost:${PORT}/api/users`);
+  console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
 }); 

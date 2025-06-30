@@ -5,7 +5,7 @@ from datetime import datetime
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("")
 async def health_check():
     """健康检查端点"""
     uptime = time.time() - getattr(health_check, 'start_time', time.time())

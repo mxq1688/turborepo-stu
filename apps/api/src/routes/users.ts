@@ -1,138 +1,311 @@
-import express from 'express';
-import type { User, CreateUserRequest, UpdateUserRequest, ApiResponse } from '@repo/shared-types';
+import { Router, Request, Response } from 'express'
+import { z } from 'zod'
+import { db } from '../services/database.js'
+import { authenticateToken, type AuthenticatedRequest } from '../middleware/auth.js'
 
-const router = express.Router();
+const router = Router()
 
-// 模拟用户数据
-let users: User[] = [
-  {
-    id: '1',
-    email: 'john@example.com',
-    name: 'John Doe',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    email: 'jane@example.com',
-    name: 'Jane Smith',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+// 验证schemas
+const updateUserSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  avatar: z.string().url().optional()
+})
+
+// 获取所有用户 (需要认证)
+router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { page = '1', limit = '10', search } = req.query
+    
+    const pageNum = parseInt(typeof page === 'string' ? page : '1')
+    const limitNum = parseInt(typeof limit === 'string' ? limit : '10')
+    const offset = (pageNum - 1) * limitNum
+
+    const where: any = {}
+    
+    if (search && typeof search === 'string') {
+      where.OR = [
+        { username: { contains: search } },
+        { email: { contains: search } },
+        { name: { contains: search } }
+      ]
+    }
+
+    const [users, total] = await Promise.all([
+      db.user.findMany({
+        where,
+        skip: offset,
+        take: limitNum,
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          name: true,
+          avatar: true,
+          emailVerified: true,
+          isActive: true,
+          lastLogin: true,
+          createdAt: true,
+          updatedAt: true
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      db.user.count({ where })
+    ])
+
+    const totalPages = Math.ceil(total / limitNum)
+
+    res.json({
+      success: true,
+      data: {
+        users,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages,
+          hasNext: pageNum < totalPages,
+          hasPrev: pageNum > 1
+        }
+      },
+      message: 'Users retrieved successfully'
+    })
+  } catch (error) {
+    console.error('Get users error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    })
   }
-];
-
-// 获取所有用户
-router.get('/', (req: express.Request, res: express.Response<ApiResponse<User[]>>) => {
-  res.json({
-    success: true,
-    data: users,
-    message: 'Users retrieved successfully'
-  });
-});
+})
 
 // 根据ID获取用户
-router.get('/:id', (req: express.Request, res: express.Response<ApiResponse<User>>) => {
-  const { id } = req.params;
-  const user = users.find(u => u.id === id);
-  
-  if (!user) {
-    return res.status(404).json({
-      success: false,
-      error: 'User not found'
-    });
-  }
-  
-  res.json({
-    success: true,
-    data: user
-  });
-});
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const userId = parseInt(id || '0')
 
-// 创建新用户
-router.post('/', (req: express.Request<{}, ApiResponse<User>, CreateUserRequest>, res: express.Response<ApiResponse<User>>) => {
-  const { email, name, avatar } = req.body;
-  
-  if (!email || !name) {
-    return res.status(400).json({
-      success: false,
-      error: 'Email and name are required'
-    });
-  }
-  
-  // 检查邮箱是否已存在
-  const existingUser = users.find(u => u.email === email);
-  if (existingUser) {
-    return res.status(409).json({
-      success: false,
-      error: 'User with this email already exists'
-    });
-  }
-  
-  const newUser: User = {
-    id: Date.now().toString(),
-    email,
-    name,
-    avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  users.push(newUser);
-  
-  res.status(201).json({
-    success: true,
-    data: newUser,
-    message: 'User created successfully'
-  });
-});
+    if (isNaN(userId)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid user ID'
+      })
+      return
+    }
 
-// 更新用户
-router.put('/:id', (req: express.Request<{ id: string }, ApiResponse<User>, UpdateUserRequest>, res: express.Response<ApiResponse<User>>) => {
-  const { id } = req.params;
-  const { name, avatar } = req.body;
-  
-  const userIndex = users.findIndex(u => u.id === id);
-  if (userIndex === -1) {
-    return res.status(404).json({
-      success: false,
-      error: 'User not found'
-    });
-  }
-  
-  users[userIndex] = {
-    ...users[userIndex],
-    ...(name && { name }),
-    ...(avatar && { avatar }),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  res.json({
-    success: true,
-    data: users[userIndex],
-    message: 'User updated successfully'
-  });
-});
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        name: true,
+        avatar: true,
+        emailVerified: true,
+        isActive: true,
+        lastLogin: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            orders: true
+          }
+        }
+      }
+    })
 
-// 删除用户
-router.delete('/:id', (req: express.Request, res: express.Response<ApiResponse>) => {
-  const { id } = req.params;
-  
-  const userIndex = users.findIndex(u => u.id === id);
-  if (userIndex === -1) {
-    return res.status(404).json({
-      success: false,
-      error: 'User not found'
-    });
-  }
-  
-  users.splice(userIndex, 1);
-  
-  res.json({
-    success: true,
-    message: 'User deleted successfully'
-  });
-});
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found'
+      })
+      return
+    }
 
-export { router as userRoutes }; 
+    res.json({
+      success: true,
+      data: { user },
+      message: 'User retrieved successfully'
+    })
+  } catch (error) {
+    console.error('Get user error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    })
+  }
+})
+
+// 更新用户信息 (需要认证，只能更新自己的信息)
+router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const userId = parseInt(id || '0')
+
+    if (isNaN(userId)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid user ID'
+      })
+      return
+    }
+
+    // 检查权限：用户只能更新自己的信息
+    if (req.user && req.user.id !== userId) {
+      res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      })
+      return
+    }
+
+    const updateData = updateUserSchema.parse(req.body)
+
+    // 检查用户是否存在
+    const existingUser = await db.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!existingUser) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found'
+      })
+      return
+    }
+
+    const user = await db.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        name: true,
+        avatar: true,
+        emailVerified: true,
+        isActive: true,
+        lastLogin: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+
+    res.json({
+      success: true,
+      data: { user },
+      message: 'User updated successfully'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: error.errors
+      })
+      return
+    }
+
+    console.error('Update user error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    })
+  }
+})
+
+// 停用用户 (需要认证，管理员功能)
+router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const userId = parseInt(id || '0')
+
+    if (isNaN(userId)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid user ID'
+      })
+      return
+    }
+
+    // 防止用户删除自己
+    if (req.user && req.user.id === userId) {
+      res.status(400).json({
+        success: false,
+        error: 'Cannot deactivate your own account'
+      })
+      return
+    }
+
+    // 检查用户是否存在
+    const existingUser = await db.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!existingUser) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found'
+      })
+      return
+    }
+
+    // 软删除：设置为不活跃
+    await db.user.update({
+      where: { id: userId },
+      data: { isActive: false }
+    })
+
+    res.json({
+      success: true,
+      message: 'User deactivated successfully'
+    })
+  } catch (error) {
+    console.error('Deactivate user error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    })
+  }
+})
+
+// 获取用户统计信息 (需要认证)
+router.get('/stats/overview', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const [
+      totalUsers,
+      activeUsers,
+      recentUsers
+    ] = await Promise.all([
+      db.user.count(),
+      db.user.count({ where: { isActive: true } }),
+      db.user.count({
+        where: {
+          createdAt: {
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 最近30天
+          }
+        }
+      })
+    ])
+
+    const stats = {
+      totalUsers,
+      activeUsers,
+      inactiveUsers: totalUsers - activeUsers,
+      recentUsers
+    }
+
+    res.json({
+      success: true,
+      data: { stats },
+      message: 'User statistics retrieved successfully'
+    })
+  } catch (error) {
+    console.error('Get user stats error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    })
+  }
+})
+
+export { router as userRoutes } 

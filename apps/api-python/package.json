@@ -3,13 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "python -m uvicorn src.main:app --host 0.0.0.0 --port 3003 --reload",
+    "dev": "cd ../.. && docker-compose up -d python-api",
+    "dev:local": "python3 -m uvicorn src.main:app --host 0.0.0.0 --port 3003 --reload",
     "build": "echo 'Python app build completed'",
-    "start": "python -m uvicorn src.main:app --host 0.0.0.0 --port 3003",
+    "start": "python3 -m uvicorn src.main:app --host 0.0.0.0 --port 3003",
     "lint": "ruff check src/",
     "check-types": "mypy src/",
     "test": "pytest",
-    "install": "pip install -r requirements.txt"
+    "install": "pip3 install -r requirements.txt",
+    "logs": "cd ../.. && docker-compose logs -f python-api",
+    "stop": "cd ../.. && docker-compose stop python-api"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

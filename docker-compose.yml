@@ -90,6 +90,33 @@ services:
       redis:
         condition: service_healthy
 
+  python-api:
+    build:
+      context: ./apps/api-python
+      dockerfile: Dockerfile
+    container_name: turborepo-python-api
+    restart: unless-stopped
+    environment:
+      PORT: 3003
+      NODE_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: turborepo_dev
+      DB_USERNAME: developer
+      DB_PASSWORD: dev123
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis123
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./apps/api-python:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   mysql_data:
     driver: local

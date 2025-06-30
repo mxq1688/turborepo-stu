@@ -23,7 +23,12 @@
     "redis:cli": "docker-compose exec redis redis-cli -a redis123",
     "redis:commander": "docker-compose up -d redis-commander",
     "redis:flush": "docker-compose exec redis redis-cli -a redis123 FLUSHALL",
-    "services:up": "docker-compose up -d mysql phpmyadmin php-app redis redis-commander",
+    "python:up": "docker-compose up -d python-api",
+    "python:down": "docker-compose stop python-api",
+    "python:logs": "docker-compose logs -f python-api",
+    "python:shell": "docker-compose exec python-api bash",
+    "python:build": "docker-compose build python-api",
+    "services:up": "docker-compose up -d mysql phpmyadmin php-app redis redis-commander python-api",
     "services:down": "docker-compose down"
   },
   "devDependencies": {

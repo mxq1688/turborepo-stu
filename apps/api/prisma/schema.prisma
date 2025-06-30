@@ -11,40 +11,104 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String
-  avatar    String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  orders    Order[]
+  id            Int             @id @default(autoincrement())
+  username      String          @db.VarChar(100)
+  email         String          @unique @db.VarChar(255)
+  passwordHash  String          @map("password_hash") @db.VarChar(255)
+  name          String?         @db.VarChar(255)
+  avatar        String?         @db.VarChar(500)
+  emailVerified Boolean         @default(false) @map("email_verified")
+  isActive      Boolean         @default(true) @map("is_active")
+  lastLogin     DateTime?       @map("last_login")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  orders        Order[]
+  refreshTokens RefreshToken[]
+  sessions      UserSession[]
 
+  @@index([email])
+  @@index([username])
   @@map("users")
 }
 
-model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?  @db.Text
-  price       Decimal  @db.Decimal(10, 2)
-  category    String?  @db.VarChar(100)
-  stock       Int      @default(0)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String   @db.VarChar(500)
+  expiresAt DateTime @map("expires_at")
+  isRevoked Boolean  @default(false) @map("is_revoked")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([token])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model UserSession {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  sessionToken String   @map("session_token") @db.VarChar(500)
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  userAgent    String?  @map("user_agent") @db.Text
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionToken])
+  @@index([userId])
+  @@map("user_sessions")
+}
+
+model Product {
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(255)
+  description String?     @db.Text
+  price       Decimal     @db.Decimal(10, 2)
+  category    String?     @db.VarChar(100)
+  stock       Int         @default(0)
+  imageUrl    String?     @map("image_url") @db.VarChar(500)
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  orderItems  OrderItem[]
+
+  @@index([category])
+  @@index([isActive])
   @@map("products")
 }
 
 model Order {
-  id          Int         @id @default(autoincrement())
-  userId      Int         @map("user_id")
-  totalAmount Decimal     @map("total_amount") @db.Decimal(10, 2)
-  status      OrderStatus @default(pending)
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              Int         @id @default(autoincrement())
+  userId          Int         @map("user_id")
+  totalAmount     Decimal     @map("total_amount") @db.Decimal(10, 2)
+  status          OrderStatus @default(pending)
+  shippingAddress String?     @map("shipping_address") @db.Text
+  notes           String?     @db.Text
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems      OrderItem[]
 
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
   @@map("orders")
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int      @map("order_id")
+  productId Int      @map("product_id")
+  quantity  Int      @default(1)
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
 }
 
 enum OrderStatus {
