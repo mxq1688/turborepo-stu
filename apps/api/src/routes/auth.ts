@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { AuthService } from '../services/auth.js'
 import { db } from '../services/database.js'
 import { authenticateToken, type AuthenticatedRequest } from '../middleware/auth.js'
+import { redisService } from '../services/redis.js'
+import crypto from 'crypto'
 
 const router = Router()
 
@@ -21,6 +23,15 @@ const loginSchema = z.object({
 
 const refreshTokenSchema = z.object({
   refreshToken: z.string()
+})
+
+const sendCodeSchema = z.object({
+  email: z.string().email()
+})
+
+const verifyCodeSchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6)
 })
 
 // 注册接口
@@ -302,6 +313,193 @@ router.get('/test', (req: Request, res: Response): void => {
     message: 'Auth routes working!',
     timestamp: new Date().toISOString()
   })
+})
+
+// 验证码相关常量
+const VERIFICATION_CODE_PREFIX = 'verification_code:'
+const CODE_EXPIRY = 300 // 5分钟
+
+// 生成6位数字验证码
+function generateVerificationCode(): string {
+  return crypto.randomInt(100000, 999999).toString()
+}
+
+// 模拟发送邮件（实际应用中需要配置SMTP）
+async function sendVerificationEmail(email: string, code: string): Promise<boolean> {
+  try {
+    // 在开发环境中模拟发送邮件
+    console.log('📧 模拟发送验证码邮件:')
+    console.log(`收件人: ${email}`)
+    console.log(`验证码: ${code}`)
+    console.log('验证码已保存到 Redis，有效期 5 分钟')
+    console.log('-'.repeat(50))
+    
+    // 生产环境中应该使用真实的邮件服务
+    // const nodemailer = require('nodemailer')
+    // const transporter = nodemailer.createTransporter({...})
+    // await transporter.sendMail({...})
+    
+    return true
+  } catch (error) {
+    console.error('发送邮件失败:', error)
+    return false
+  }
+}
+
+// 发送验证码
+router.post('/send-verification-code', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = sendCodeSchema.parse(req.body)
+    
+    // 生成验证码
+    const code = generateVerificationCode()
+    
+    // 存储到 Redis
+    const key = `${VERIFICATION_CODE_PREFIX}${email}`
+    
+    await redisService.set(key, JSON.stringify({
+      code,
+      email,
+      createdAt: new Date().toISOString(),
+      attempts: 0
+    }), CODE_EXPIRY)
+    
+    // 发送邮件
+    const emailSent = await sendVerificationEmail(email, code)
+    
+    if (emailSent) {
+      res.json({
+        success: true,
+        message: `验证码已发送到 ${email}，请查收邮件`,
+        data: {
+          email,
+          expiresIn: CODE_EXPIRY
+        }
+      })
+    } else {
+      res.status(500).json({
+        success: false,
+        error: '邮件发送失败，请稍后重试'
+      })
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid email format',
+        details: error.errors
+      })
+      return
+    }
+
+    console.error('Send verification code error:', error)
+    res.status(500).json({
+      success: false,
+      error: '发送验证码失败'
+    })
+  }
+})
+
+// 验证码登录
+router.post('/login-with-code', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, code } = verifyCodeSchema.parse(req.body)
+    
+    const key = `${VERIFICATION_CODE_PREFIX}${email}`
+    
+    // 从 Redis 获取验证码数据
+    const storedData = await redisService.get(key)
+    
+    if (!storedData) {
+      res.status(400).json({
+        success: false,
+        error: '验证码不存在或已过期'
+      })
+      return
+    }
+    
+    const codeData = JSON.parse(storedData)
+    
+    // 检查尝试次数
+    if (codeData.attempts >= 3) {
+      await redisService.delete(key)
+      res.status(400).json({
+        success: false,
+        error: '验证码尝试次数过多，请重新获取'
+      })
+      return
+    }
+    
+    // 验证验证码
+    if (code !== codeData.code) {
+      // 增加尝试次数
+      codeData.attempts += 1
+      await redisService.set(key, JSON.stringify(codeData), CODE_EXPIRY)
+      
+      res.status(400).json({
+        success: false,
+        error: `验证码错误，还可尝试 ${3 - codeData.attempts} 次`
+      })
+      return
+    }
+    
+    // 验证成功，删除验证码
+    await redisService.delete(key)
+    
+    // 查找用户
+    const user = await db.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        name: true,
+        avatar: true,
+        isActive: true,
+        createdAt: true
+      }
+    })
+
+    if (!user || !user.isActive) {
+      res.status(404).json({
+        success: false,
+        error: '用户不存在或已被禁用'
+      })
+      return
+    }
+
+    // 生成认证令牌
+    const tokens = await AuthService.generateAuthTokens(user)
+
+    // 更新最后登录时间
+    await AuthService.updateLastLogin(user.id)
+
+    res.json({
+      success: true,
+      data: {
+        user,
+        token: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresIn: tokens.expiresIn
+      },
+      message: '验证码登录成功'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: error.errors
+      })
+      return
+    }
+
+    console.error('Login with code error:', error)
+    res.status(500).json({
+      success: false,
+      error: '验证码登录失败'
+    })
+  }
 })
 
 export default router

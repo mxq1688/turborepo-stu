@@ -162,4 +162,18 @@ class RedisService {
   }
 }
 
-export default RedisService; 
+export default RedisService;
+
+// 创建并导出实例
+export const redisService = RedisService.getInstance();
+
+// 为了兼容性，直接导出常用方法
+export const redis = {
+  set: (key: string, value: string | object, ttl?: number) => redisService.set(key, value, ttl),
+  get: (key: string) => redisService.get(key),
+  setex: (key: string, ttl: number, value: string) => redisService.getClient().setex(key, ttl, value),
+  del: (key: string) => redisService.delete(key),
+  exists: (key: string) => redisService.exists(key),
+  expire: (key: string, seconds: number) => redisService.expire(key, seconds),
+  ping: () => redisService.ping()
+}; 

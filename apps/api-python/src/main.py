@@ -3,20 +3,51 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import os
 import time
+import logging
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 from .routes.users import router as users_router
 from .routes.health import router as health_router
+from .routes.auth import router as auth_router
+from .services.database import DatabaseService
 
 # 加载环境变量
 load_dotenv()
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# 应用生命周期管理
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动时初始化数据库
+    try:
+        logger.info("🚀 Initializing database connection...")
+        await DatabaseService.initialize()
+        logger.info("✅ Database connection initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize database: {e}")
+        raise e
+    
+    yield
+    
+    # 关闭时清理数据库连接
+    try:
+        logger.info("🔄 Closing database connection...")
+        await DatabaseService.close()
+        logger.info("✅ Database connection closed successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to close database: {e}")
 
 app = FastAPI(
     title="Turborepo Python API",
     description="A Python FastAPI backend for the Turborepo monorepo",
     version="0.1.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # 启动时间记录
@@ -35,6 +66,7 @@ app.add_middleware(
 # 注册路由
 app.include_router(health_router, prefix="/health", tags=["health"])
 app.include_router(users_router, prefix="/api/users", tags=["users"])
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
 # 全局异常处理
 @app.exception_handler(HTTPException)
