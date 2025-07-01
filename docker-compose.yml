@@ -66,7 +66,7 @@ services:
 
   php-app:
     build:
-      context: ./apps/web-php
+      context: ./apps/api-php
       dockerfile: Dockerfile
     container_name: turborepo-php-app
     restart: unless-stopped
@@ -83,7 +83,7 @@ services:
     ports:
       - "3005:80"
     volumes:
-      - ./apps/web-php:/var/www/html
+      - ./apps/api-php:/var/www/html
     depends_on:
       mysql:
         condition: service_healthy

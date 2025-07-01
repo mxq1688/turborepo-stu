@@ -15,7 +15,7 @@
 ## 📁 项目结构
 
 ```
-apps/web-php/
+apps/api-php/
 ├── public/
 │   └── index.php          # 应用入口点
 ├── src/
@@ -78,7 +78,7 @@ docker-compose exec php-app bash
 
 ### 方法3: 在应用目录内
 ```bash
-cd apps/web-php
+cd apps/api-php
 
 # 启动开发服务器
 npm run dev

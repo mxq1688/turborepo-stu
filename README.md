@@ -18,7 +18,7 @@ This Turborepo includes the following packages/apps:
 
 - `web`: a [Next.js](https://nextjs.org/) app (port 3000)
 - `web-vue`: a [Vue.js](https://vuejs.org/) app with authentication (port 3004)
-- `web-php`: a PHP application (port 3005)
+- `api-php`: a PHP application (port 3005)
 - `api`: a Node.js/Express.js API server with full e-commerce features (port 3002)
 - `api-python`: a Python/FastAPI API server (port 3003) 🐍
 - `@repo/ui`: a stub React component library shared by `web` application

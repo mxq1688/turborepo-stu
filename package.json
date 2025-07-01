@@ -23,6 +23,7 @@
     "php:logs": "docker-compose logs -f php-app",
     "php:shell": "docker-compose exec php-app bash",
     "php:composer": "docker-compose exec php-app composer",
+    "php:build": "docker-compose build php-app",
     "python:up": "docker-compose up -d python-api",
     "python:down": "docker-compose stop python-api",
     "python:logs": "docker-compose logs -f python-api",

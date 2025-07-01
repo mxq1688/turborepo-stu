@@ -16,7 +16,7 @@
 - ✅ **缓存API路由** - 完整的Redis操作API
 - ✅ **错误处理** - 完善的异常处理机制
 
-### **PHP API集成** (`apps/web-php/`)
+### **PHP API集成** (`apps/api-php/`)
 - ✅ **Predis客户端** - PHP Redis客户端
 - ✅ **Redis服务类** - 单例模式连接管理
 - ✅ **缓存API路由** - 完整的Redis操作API

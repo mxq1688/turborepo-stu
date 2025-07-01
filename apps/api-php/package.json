@@ -1,5 +1,5 @@
 {
-  "name": "web-php",
+  "name": "api-php",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,6 +11,6 @@
     "shell": "docker-compose exec php-app bash",
     "composer": "docker-compose exec php-app composer",
     "test": "docker-compose exec php-app composer test",
-    "install": "docker-compose exec php-app composer install"
+    "composer:install": "docker-compose exec php-app composer install"
   }
 } 

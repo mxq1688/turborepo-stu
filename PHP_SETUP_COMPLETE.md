@@ -5,7 +5,7 @@
 ## 📁 新增文件结构
 
 ```
-apps/web-php/                    # PHP应用目录
+apps/api-php/                    # PHP应用目录
 ├── public/
 │   └── index.php               # 应用入口点和路由
 ├── src/

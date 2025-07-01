@@ -1,5 +1,5 @@
 {
-    "name": "turborepo/web-php",
+    "name": "turborepo/api-php",
     "description": "PHP API application for Turborepo project",
     "type": "project",
     "require": {
