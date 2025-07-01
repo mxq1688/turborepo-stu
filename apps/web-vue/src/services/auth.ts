@@ -16,6 +16,7 @@ interface RegisterRequest {
   username: string
   email: string
   password: string
+  verificationCode: string
 }
 
 interface AuthResponse {
@@ -25,6 +26,16 @@ interface AuthResponse {
     user: User
   }
   error?: string
+}
+
+interface SendCodeResponse {
+  success: boolean
+  data?: {
+    email: string
+    expiresIn: number
+  }
+  error?: string
+  message?: string
 }
 
 const API_BASE_URL = 'http://localhost:3002'
@@ -88,6 +99,68 @@ export const authService = {
         return {
           success: false,
           error: data.error || '注册失败',
+        }
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: '网络错误，请稍后重试',
+      }
+    }
+  },
+
+  async sendVerificationCode(email: string): Promise<SendCodeResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/send-verification-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        return {
+          success: true,
+          data: data.data,
+          message: data.message
+        }
+      } else {
+        return {
+          success: false,
+          error: data.error || '发送验证码失败',
+        }
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: '网络错误，请稍后重试',
+      }
+    }
+  },
+
+  async getVerificationCode(email: string): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/dev/verification-codes?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        return {
+          success: true,
+          data: data.data
+        }
+      } else {
+        return {
+          success: false,
+          error: data.error || '获取验证码失败',
         }
       }
     } catch (error) {

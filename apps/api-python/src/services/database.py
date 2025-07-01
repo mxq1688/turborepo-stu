@@ -3,6 +3,7 @@ import os
 from typing import Optional
 import logging
 from contextlib import asynccontextmanager
+from ..config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -22,17 +23,18 @@ class DatabaseService:
         if cls._pool is None:
             try:
                 cls._pool = await aiomysql.create_pool(
-                    host=os.getenv('DB_HOST', 'localhost'),
-                    port=int(os.getenv('DB_PORT', '3306')),
-                    user=os.getenv('DB_USERNAME', 'developer'),
-                    password=os.getenv('DB_PASSWORD', 'dev123'),
-                    db=os.getenv('DB_DATABASE', 'turborepo_dev'),
-                    charset='utf8mb4',
+                    host=settings.DB_HOST,
+                    port=settings.DB_PORT,
+                    user=settings.DB_USERNAME,
+                    password=settings.DB_PASSWORD,
+                    db=settings.DB_DATABASE,
+                    charset=settings.DB_CHARSET,
                     autocommit=True,
                     minsize=1,
-                    maxsize=10,
+                    maxsize=settings.DB_POOL_SIZE,
                 )
-                logger.info("✅ Database connection pool created successfully")
+                logger.info(f"✅ Database connection pool created successfully (Environment: {settings.ENVIRONMENT})")
+                logger.debug(f"🔍 Database config: {settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_DATABASE}")
             except Exception as e:
                 logger.error(f"❌ Database connection failed: {e}")
                 raise e

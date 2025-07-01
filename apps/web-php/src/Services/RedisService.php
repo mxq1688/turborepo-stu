@@ -297,7 +297,8 @@ class RedisService
     public function ping(): string
     {
         try {
-            return $this->client->ping() ?? 'PONG';
+            $result = $this->client->ping();
+            return (string)$result;
         } catch (Exception $e) {
             error_log("Redis ping error: " . $e->getMessage());
             return 'ERROR: ' . $e->getMessage();
@@ -317,7 +318,8 @@ class RedisService
     public function isConnected(): bool
     {
         try {
-            return $this->ping() === 'PONG';
+            $pingResult = $this->ping();
+            return $pingResult === 'PONG' || strpos($pingResult, 'PONG') !== false;
         } catch (Exception $e) {
             return false;
         }

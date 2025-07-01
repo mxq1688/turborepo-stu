@@ -58,7 +58,7 @@ npm run php:composer install
 | Vue Web | 3004 | http://localhost:3004 |
 | **PHP Web** | **3005** | **http://localhost:3005** |
 | Next.js Web | 3000 | http://localhost:3000 |
-| Next.js Docs | 3001 | http://localhost:3001 |
+
 
 ## 🔧 PHP API 端点
 
@@ -153,7 +153,7 @@ curl -X POST http://localhost:3005/api/users \
 
 2. **3个前端应用**:
    - Next.js Web - 端口3000
-   - Next.js Docs - 端口3001
+   
    - Vue.js Web - 端口3004
 
 3. **数据库服务**:

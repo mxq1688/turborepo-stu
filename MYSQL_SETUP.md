@@ -7,8 +7,8 @@
 - `docker-compose.yml` - Docker Compose配置
 - `database/init/01-init.sql` - 数据库初始化脚本
 - `database/README.md` - 数据库文档
-- `apps/api/prisma/schema.prisma` - Prisma数据模型
-- `apps/api/.env.example` - 环境变量示例
+- `apps/api-node/prisma/schema.prisma` - Prisma数据模型
+- `apps/api-node/.env.example` - 环境变量示例
 
 ## 🚀 快速启动
 
@@ -43,7 +43,7 @@ npm run db:generate
 - Python API: `http://localhost:3003`
 - Vue Web: `http://localhost:3004`
 - Next.js Web: `http://localhost:3000`
-- Next.js Docs: `http://localhost:3001`
+
 
 ## 🗃️ 数据库连接
 
@@ -67,7 +67,7 @@ npm run db:down    # 停止数据库
 npm run db:reset   # 重置数据库
 npm run db:logs    # 查看日志
 
-# Prisma操作 (在 apps/api 目录)
+# Prisma操作 (在 apps/api-node 目录)
 npm run db:generate  # 生成客户端
 npm run db:push      # 推送模式
 npm run db:studio    # 打开Studio

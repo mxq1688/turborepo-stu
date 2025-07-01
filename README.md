@@ -16,11 +16,12 @@ This Turborepo includes the following packages/apps:
 
 ### Apps and Packages
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `api`: a Node.js/Express.js API server (port 3002)
+- `web`: a [Next.js](https://nextjs.org/) app (port 3000)
+- `web-vue`: a [Vue.js](https://vuejs.org/) app with authentication (port 3004)
+- `web-php`: a PHP application (port 3005)
+- `api`: a Node.js/Express.js API server with full e-commerce features (port 3002)
 - `api-python`: a Python/FastAPI API server (port 3003) 🐍
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@repo/ui`: a stub React component library shared by `web` application
 - `@repo/shared-types`: TypeScript and Python type definitions
 - `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
 - `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo

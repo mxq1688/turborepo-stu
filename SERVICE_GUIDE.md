@@ -4,12 +4,11 @@
 
 ## 📋 服务总览
 
-### 🎨 前端应用 (3个)
+### 🎨 前端应用 (2个)
 | 服务 | 端口 | 技术栈 | 描述 |
 |------|------|--------|------|
 | **Next.js Web** | 3000 | Next.js 15 + Turbopack | 主要Web应用 |
-| **Next.js Docs** | 3001 | Next.js 15 + Turbopack | 文档站点 |
-| **Vue Web** | 3004 | Vue 3 + Vite | Vue前端应用 |
+| **Vue Web** | 3004 | Vue 3 + Vite | Vue前端应用 (认证页面) |
 
 ### 🔧 后端API (3个)
 | 服务 | 端口 | 技术栈 | 数据库连接 | 描述 |
@@ -66,8 +65,7 @@ npm run services:up
 npm run dev
 
 # 或单独启动
-cd apps/web && npm run dev         # Next.js Web (3000)
-cd apps/docs && npm run dev        # Next.js Docs (3001)
+cd apps/web-next && npm run dev         # Next.js Web (3000)
 cd apps/web-vue && npm run dev     # Vue Web (3004)
 ```
 
@@ -100,8 +98,8 @@ npm run db:down      # 停止MySQL
 npm run db:reset     # 重置MySQL (删除所有数据)
 npm run db:logs      # 查看MySQL日志
 
-# Prisma操作 (在 apps/api 目录下)
-cd apps/api
+# Prisma操作 (在 apps/api-node 目录下)
+cd apps/api-node
 npm run db:generate  # 生成Prisma客户端
 npm run db:push      # 推送数据库模式
 npm run db:studio    # 打开Prisma Studio
@@ -143,13 +141,12 @@ npm run php:composer   # 运行Composer命令
 
 ### 前端应用
 - **Next.js Web**: http://localhost:3000
-- **Next.js Docs**: http://localhost:3001
-- **Vue Web**: http://localhost:3004
+- **Vue Web**: http://localhost:3004 (注册/登录页面)
 
 ### 后端API
 - **Node.js API**: http://localhost:3002
   - 健康检查: http://localhost:3002/health
-  - API文档: 参考 `apps/api/API_DOCUMENTATION.md`
+  - API文档: 参考 `apps/api-node/API_DOCUMENTATION.md`
 - **Python API**: http://localhost:3003
   - API文档: http://localhost:3003/docs
 - **PHP 应用**: http://localhost:3005
@@ -215,7 +212,6 @@ Redis (6379) ←── Redis Commander (8081)
 
 独立运行:
 - Next.js Web (3000)
-- Next.js Docs (3001)  
 - Vue Web (3004)
 ```
 
@@ -259,7 +255,7 @@ Redis (6379) ←── Redis Commander (8081)
 
 1. **启动基础服务**: `npm run services:up`
 2. **等待MySQL就绪**: 约10-15秒
-3. **生成Prisma客户端**: `cd apps/api && npm run db:generate`
+3. **生成Prisma客户端**: `cd apps/api-node && npm run db:generate`
 4. **启动开发服务**: `npm run dev`
 
 ### 性能优化

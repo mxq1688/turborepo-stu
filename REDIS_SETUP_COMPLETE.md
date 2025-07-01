@@ -10,7 +10,7 @@
 - ✅ **数据持久化** - 数据不会因容器重启丢失
 - ✅ **密码保护** - 安全的Redis访问
 
-### **Node.js API集成** (`apps/api/`)
+### **Node.js API集成** (`apps/api-node/`)
 - ✅ **IORedis客户端** - 高性能Redis客户端
 - ✅ **Redis服务类** - 单例模式连接管理
 - ✅ **缓存API路由** - 完整的Redis操作API
@@ -35,7 +35,7 @@
 | Vue Web | 3004 | http://localhost:3004 | 前端应用 |
 | PHP Web | 3005 | http://localhost:3005 | 后端API |
 | Next.js Web | 3000 | http://localhost:3000 | 前端应用 |
-| Next.js Docs | 3001 | http://localhost:3001 | 文档应用 |
+
 
 ## 🔧 Redis连接信息
 
